@@ -31,11 +31,13 @@ kea:
   # interface: eth1 - specify interface if needed for multus
   dhcp4:
     enabled: true
+    dhcpSocketType: raw
     validlifetime: "4000"
     renewtimer: "1000"
     rebindtimer: "2000"
     loglevel: "DEBUG"
-    options: {}
+    debugLevel: 0
+    options: []
       # - name: domain-name-servers
       #   data: 192.168.1.2
       # - name: domain-name
@@ -45,14 +47,14 @@ kea:
       # - code: 66
       #   data: 192.168.1.2
       #   name: tftp-server-name
-    reservations: {}
+    reservations: []
       # - ip-address: "192.168.1.2"
       #   hw-address: "aa:aa:aa:aa:aa:aa"
       #   hostname: "hostname"
       #   option-data:
       #     - name: "tftp-servers"
       #       data: "10.1.1.202,10.1.1.203"
-    subnets: {}
+    subnets: []
       # - subnet: "192.168.1.0/24"
       #   pools:
       #     - pool: "192.168.1.10-192.168.1.254"
@@ -61,19 +63,21 @@ kea:
       #       data: "172.16.10.1"
   dhcp6:
     enabled: false
+    dhcpSocketType: raw
     validlifetime: "4000"
     renewtimer: "1000"
     rebindtimer: "2000"
     loglevel: "DEBUG"
-    options: {}
-    reservations: {}
+    debugLevel: 0
+    options: []
+    reservations: []
       # - ip-address: "2001:db8:1::100"
       #   duid: "aa:aa:aa:aa:aa:aa"
       #   hostname: "hostname"
       #   option-data:
       #     - name: "dns-servers"
       #       data: "2001:db8:2::45, 2001:db8:2::100"
-    subnets: {}
+    subnets: []
       # - subnet: "2001:db8:1::/48"
       #   pools:
       #     - pool: "2001:db8:1::/80"

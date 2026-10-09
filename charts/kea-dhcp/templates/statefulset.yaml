@@ -41,6 +41,8 @@ spec:
       {{- end }}
       initContainers:
       - name: init-kea
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         command:
         - sh
@@ -85,6 +87,10 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- if .Values.readinessProbe.enabled }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/usr/bin/env", "keactrl", "stop", "-c", "/config/kea/keactrl.conf"]
           readinessProbe:
             exec:
               command:
@@ -135,6 +141,11 @@ spec:
           volumeMounts:
           - name: data
             mountPath: /data
+          - name: kea-run
+            mountPath: /run/kea
+          # Prevent error Unable to use interprocess sync lockfile (No such file or directory): /data/run/kea/logger_lockfile
+          - name: kea-run
+            mountPath: /data/run/kea
           - name: kea-config
             mountPath: /config/kea
         {{ if gt .Values.replicaCount 1.0 }}
@@ -156,6 +167,8 @@ spec:
         {{- end }}
       volumes:
       - name: kea-config
+        emptyDir: {}
+      - name: kea-run
         emptyDir: {}
       - name: kea-configmap
         configMap:

@@ -14,7 +14,8 @@ data:
             },
             "interfaces-config": {
                 "interfaces": [ "INTERFACE" ],
-                "dhcp-socket-type": "raw"
+                "service-sockets-require-all": true,
+                "dhcp-socket-type": "{{ .Values.kea.dhcp4.dhcpSocketType }}"
             },
             "valid-lifetime": {{ .Values.kea.dhcp4.validlifetime }},
             "renew-timer": {{ .Values.kea.dhcp4.renewtimer }},
@@ -54,16 +55,25 @@ data:
             {{- if .Values.kea.dhcp4.subnets }}
             "subnet4": {{ .Values.kea.dhcp4.subnets | toJson }},
             {{- end }}
+            {{- if .Values.kea.dhcp4.sharedNetworks }}
+            "shared-networks": {{ .Values.kea.dhcp4.sharedNetworks | toJson }},
+            {{- end }}
+            {{- if .Values.kea.dhcp4.clientClasses }}
+            "client-classes": {{ .Values.kea.dhcp4.clientClasses | toJson }},
+            {{- end }}
             {{ if gt .Values.replicaCount 1.0 }}
             <?include "ha.json"?>
             {{- end }}
             "loggers": [{
                 "name": "kea-dhcp4",
                 "output_options": [
-                    {
+                  {
                     "output": "stdout"
-                    }
+                  }
                 ],
+                {{- if eq .Values.kea.dhcp4.loglevel "DEBUG" }}
+                "debuglevel": {{ .Values.kea.dhcp4.debugLevel }},
+                {{- end }}
                 "severity": "{{ .Values.kea.dhcp4.loglevel }}"
             }]
         }
@@ -80,7 +90,8 @@ data:
             },
             "interfaces-config": {
                 "interfaces": [ "INTERFACE" ],
-                "dhcp-socket-type": "raw"
+                "service-sockets-require-all": true,
+                "dhcp-socket-type": "{{ .Values.kea.dhcp6.dhcpSocketType }}"
             },
             "valid-lifetime": {{ .Values.kea.dhcp6.validlifetime }},
             "renew-timer": {{ .Values.kea.dhcp6.renewtimer }},
@@ -120,16 +131,22 @@ data:
             {{- if .Values.kea.dhcp6.subnets }}
             "subnet6": {{ .Values.kea.dhcp6.subnets | toJson }},
             {{- end }}
+            {{- if .Values.kea.dhcp6.clientClasses }}
+            "client-classes": {{ .Values.kea.dhcp6.clientClasses | toJson }},
+            {{- end }}
             {{ if gt .Values.replicaCount 1.0 }}
             <?include "ha.json"?>
             {{- end }}
             "loggers": [{
                 "name": "kea-dhcp6",
                 "output_options": [
-                    {
+                  {
                     "output": "stdout"
-                    }
+                  }
                 ],
+                {{- if eq .Values.kea.dhcp6.loglevel "DEBUG" }}
+                "debuglevel": {{ .Values.kea.dhcp6.debugLevel }},
+                {{- end }}
                 "severity": "{{ .Values.kea.dhcp6.loglevel }}"
             }]
         }
@@ -195,26 +212,26 @@ data:
     }
   keactrl.conf: |
     #!/bin/sh
-    
+
     # This is a configuration file for keactrl script which controls
     # the startup, shutdown, reconfiguration and gathering the status
     # of the Kea's processes.
-    
+
     # Note that control agent must be launched after servers and netconf last.
-    
+
     # shellcheck disable=SC2034
     # SC2034: ... appears unused. Verify use (or export if used externally).
-    
+
     # prefix holds the location where the Kea is installed.
     prefix="/usr/local"
-    
+
     # Location of Kea configuration files.
     kea_dhcp4_config_file="/config/kea/kea-dhcp4.conf"
     kea_dhcp6_config_file="/config/kea/kea-dhcp6.conf"
     kea_dhcp_ddns_config_file="/config/kea/kea-dhcp-ddns.conf"
     kea_ctrl_agent_config_file="/config/kea/kea-ctrl-agent.conf"
     kea_netconf_config_file="/config/kea/kea-netconf.conf"
-    
+
     # Location of Kea binaries.
     exec_prefix="${prefix}"
     dhcp4_srv="${exec_prefix}/sbin/kea-dhcp4"
@@ -222,22 +239,22 @@ data:
     dhcp_ddns_srv="${exec_prefix}/sbin/kea-dhcp-ddns"
     ctrl_agent_srv="${exec_prefix}/sbin/kea-ctrl-agent"
     netconf_srv="${exec_prefix}/sbin/kea-netconf"
-    
+
     # Start DHCPv4 server?
     dhcp4={{- if .Values.kea.dhcp4.enabled }}yes{{- else }}no{{- end }}
-    
+
     # Start DHCPv6 server?
     dhcp6={{- if .Values.kea.dhcp6.enabled }}yes{{- else }}no{{- end }}
-    
+
     # Start DHCP DDNS server?
     dhcp_ddns={{- if .Values.kea.ddns.enabled }}yes{{- else }}no{{- end }}
-    
+
     # Start Control Agent?
     ctrl_agent={{- if .Values.kea.ctrlagent.enabled }}yes{{- else }}no{{- end }}
-    
+
     # Start Netconf?
     netconf=no
-    
+
     # Be verbose?
     kea_verbose=no
   {{ if gt .Values.replicaCount 1.0 }}
